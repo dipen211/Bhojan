@@ -1,0 +1,50 @@
+branches = [
+    {
+        "id": 1,
+        "tenant_id": 1,
+        "name": "Hitech Digital Canteen",
+        "slug": "hitechdigital",
+        "address": "Hitech Digital Campus, Ahmedabad",
+        "city": "Ahmedabad",
+        "state": "Gujarat",
+        "pincode": "380015",
+        "phone": "9999999991",
+        "email": "hitech@chulo.com",
+        "manager_name": "Raj Patel",
+        "is_active": True,
+        "opening_time": "08:00",
+        "closing_time": "22:00"
+    },
+    {
+        "id": 2,
+        "tenant_id": 1,
+        "name": "Tatvasoft Canteen",
+        "slug": "tatvasoft",
+        "address": "Tatvasoft Campus, Ahmedabad",
+        "city": "Ahmedabad",
+        "state": "Gujarat",
+        "pincode": "380059",
+        "phone": "9999999992",
+        "email": "tatvasoft@chulo.com",
+        "manager_name": "Nidhi Shah",
+        "is_active": True,
+        "opening_time": "08:00",
+        "closing_time": "21:00"
+    },
+    {
+        "id": 3,
+        "tenant_id": 1,
+        "name": "Infosys Canteen",
+        "slug": "infosys",
+        "address": "Infosys Campus, Ahmedabad",
+        "city": "Ahmedabad",
+        "state": "Gujarat",
+        "pincode": "380060",
+        "phone": "9999999993",
+        "email": "infosys@chulo.com",
+        "manager_name": "Karan Mehta",
+        "is_active": True,
+        "opening_time": "07:30",
+        "closing_time": "20:30"
+    }
+]
