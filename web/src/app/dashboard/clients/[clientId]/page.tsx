@@ -72,10 +72,10 @@ export default function ClientDetailsPage({
 
   const client = clientQuery.data;
   const branches = (branchesQuery.data ?? []).filter(
-    (branch) => branch.tenant_id === client.id,
+    (branch) => branch.tenant_id === client?.id,
   );
   const users = (usersQuery.data ?? []).filter(
-    (entry) => entry.tenant_id === client.id,
+    (entry) => entry.tenant_id === client?.id,
   );
   const clientAdmins = users.filter((entry) => entry.role === "CLIENT_ADMIN");
   const branchManagers = users.filter(
@@ -93,7 +93,7 @@ export default function ClientDetailsPage({
             </Button>
           </Link>
           <h1 className="mt-4 text-4xl font-semibold text-stone-950">
-            {client.name}
+            {client?.name}
           </h1>
           <p className="mt-2 text-sm leading-6 text-stone-500">
             Franchise client overview with business details, branches, and
@@ -101,9 +101,9 @@ export default function ClientDetailsPage({
           </p>
         </div>
         <div
-          className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] ${client.is_active !== false ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}
+          className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] ${client?.is_active !== false ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}
         >
-          {client.is_active !== false ? "Active client" : "Inactive client"}
+          {client?.is_active !== false ? "Active client" : "Inactive client"}
         </div>
       </div>
 
@@ -116,7 +116,7 @@ export default function ClientDetailsPage({
                 <p className="text-xs uppercase tracking-[0.18em]">Company</p>
               </div>
               <p className="mt-4 text-xl font-semibold text-stone-950">
-                {client.company_name}
+                {client?.company_name}
               </p>
             </div>
             <div className="rounded-[24px] bg-white/75 p-5">
@@ -125,9 +125,9 @@ export default function ClientDetailsPage({
                 <p className="text-xs uppercase tracking-[0.18em]">Domain</p>
               </div>
               <p className="mt-4 text-xl font-semibold text-stone-950">
-                {client.domain}
+                {client?.domain}
               </p>
-              <p className="mt-1 text-sm text-stone-500">{client.slug}</p>
+              <p className="mt-1 text-sm text-stone-500">{client?.slug}</p>
             </div>
             <div className="rounded-[24px] bg-white/75 p-5">
               <div className="flex items-center gap-2 text-stone-500">
@@ -135,7 +135,7 @@ export default function ClientDetailsPage({
                 <p className="text-xs uppercase tracking-[0.18em]">Email</p>
               </div>
               <p className="mt-4 text-lg font-semibold text-stone-950">
-                {client.email}
+                {client?.email}
               </p>
             </div>
             <div className="rounded-[24px] bg-white/75 p-5">
@@ -144,7 +144,7 @@ export default function ClientDetailsPage({
                 <p className="text-xs uppercase tracking-[0.18em]">Phone</p>
               </div>
               <p className="mt-4 text-lg font-semibold text-stone-950">
-                {client.phone}
+                {client?.phone}
               </p>
             </div>
           </div>

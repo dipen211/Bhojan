@@ -16,13 +16,16 @@ interface SessionState {
   setHydrated: (value: boolean) => void;
 }
 
-function createSessionStorage() {
+function createSessionStorage(): Storage {
   if (typeof window === "undefined") {
     return {
+      length: 0,
+      clear: () => undefined,
       getItem: () => null,
-      setItem: () => undefined,
+      key: () => null,
       removeItem: () => undefined,
-    } as Storage;
+      setItem: () => undefined,
+    };
   }
 
   return localStorage;

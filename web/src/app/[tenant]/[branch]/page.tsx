@@ -35,7 +35,7 @@ export default function BranchTenantPage({
   const [orderForm, setOrderForm] = useState({
     customer_name: "",
     customer_phone: "",
-    payment_status: PAYMENT_STATUSES[0],
+    payment_status: PAYMENT_STATUSES[0] as string,
   });
   const [latestOrderId, setLatestOrderId] = useState<number | null>(null);
   const [events, setEvents] = useState<string[]>([]);

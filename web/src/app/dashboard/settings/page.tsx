@@ -38,7 +38,9 @@ export default function DashboardSettingsPage() {
   }
 
   if (!user || !token) {
-    return <Error message="You need to be signed in to update profile settings." />;
+    return (
+      <Error message="You need to be signed in to update profile settings." />
+    );
   }
 
   const resolvedName = name || user.name;
@@ -48,13 +50,21 @@ export default function DashboardSettingsPage() {
     <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
       <Card className="space-y-5">
         <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-stone-400">Profile overview</p>
-          <h1 className="mt-2 text-3xl font-semibold text-stone-950">{user.name}</h1>
-          <p className="mt-2 text-sm text-stone-500">Your dashboard access and branch scope are shown here.</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-stone-400">
+            Profile overview
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold text-stone-950">
+            {user.name}
+          </h1>
+          <p className="mt-2 text-sm text-stone-500">
+            Your dashboard access and branch scope are shown here.
+          </p>
         </div>
 
         <div className="grid gap-3">
-          <div className="rounded-[24px] bg-stone-50 p-4 text-sm text-stone-600">Role: {formatRole(user.role)}</div>
+          <div className="rounded-[24px] bg-stone-50 p-4 text-sm text-stone-600">
+            Role: {formatRole(user.role)}
+          </div>
           <div className="rounded-[24px] bg-stone-50 p-4 text-sm text-stone-600">
             Tenant: {user.tenant_id ?? "Global"}
           </div>
@@ -66,15 +76,22 @@ export default function DashboardSettingsPage() {
 
       <Card className="space-y-5">
         <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-stone-400">Profile settings</p>
-          <h2 className="mt-2 text-2xl font-semibold text-stone-950">Update account details</h2>
+          <p className="text-xs uppercase tracking-[0.24em] text-stone-400">
+            Profile settings
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold text-stone-950">
+            Update account details
+          </h2>
         </div>
 
         <form
           className="grid gap-4"
           onSubmit={(event) => {
             event.preventDefault();
-
+            if (user.role === "CUSTOMER") {
+              toast.error("Invalid role");
+              return;
+            }
             mutation.mutate({
               name: resolvedName,
               email: resolvedEmail,
@@ -87,11 +104,20 @@ export default function DashboardSettingsPage() {
         >
           <div className="space-y-2">
             <Label htmlFor="settings-name">Name</Label>
-            <Input id="settings-name" value={resolvedName} onChange={(event) => setName(event.target.value)} />
+            <Input
+              id="settings-name"
+              value={resolvedName}
+              onChange={(event) => setName(event.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="settings-email">Email</Label>
-            <Input id="settings-email" type="email" value={resolvedEmail} onChange={(event) => setEmail(event.target.value)} />
+            <Input
+              id="settings-email"
+              type="email"
+              value={resolvedEmail}
+              onChange={(event) => setEmail(event.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="settings-password">New password</Label>
@@ -103,7 +129,9 @@ export default function DashboardSettingsPage() {
               onChange={(event) => setPassword(event.target.value)}
             />
           </div>
-          <Button disabled={mutation.isPending}>{mutation.isPending ? "Saving..." : "Save changes"}</Button>
+          <Button disabled={mutation.isPending}>
+            {mutation.isPending ? "Saving..." : "Save changes"}
+          </Button>
         </form>
       </Card>
     </div>
