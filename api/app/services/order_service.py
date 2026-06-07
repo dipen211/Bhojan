@@ -13,6 +13,14 @@ class OrderService:
         return OrderRepository.find_all()
 
     @staticmethod
+    def get_tenant_orders(
+        tenant_id: int
+    ):
+        return OrderRepository.find_by_tenant_id(
+            tenant_id
+        )
+
+    @staticmethod
     def get_branch_orders(
         branch_id: int
     ):
@@ -37,6 +45,20 @@ class OrderService:
         )
 
         order["items"] = items
+
+        return order
+
+    @staticmethod
+    def get_public_order(
+        order_id: int,
+        branch_id: int
+    ):
+        order = OrderService.get_order_by_id(
+            order_id
+        )
+
+        if not order or order["branch_id"] != branch_id:
+            return None
 
         return order
 

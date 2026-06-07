@@ -36,6 +36,9 @@ from app.api.v1.routes.menu_item_routes import (
 from app.api.v1.routes.user_routes import (
     router as user_router
 )
+from app.api.v1.routes.storefront_routes import (
+    router as storefront_router
+)
 from app.websocket.order_socket import (
     router as websocket_router
 )
@@ -120,6 +123,11 @@ app.include_router(
 )
 app.include_router(
     user_router,
+
+    prefix="/api/v1"
+)
+app.include_router(
+    storefront_router,
 
     prefix="/api/v1"
 )

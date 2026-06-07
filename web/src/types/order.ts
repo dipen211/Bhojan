@@ -16,6 +16,7 @@ export interface Order {
   total_amount: number;
   status: string;
   payment_status: string;
+  customer_token?: string;
   items?: OrderItem[];
 }
 

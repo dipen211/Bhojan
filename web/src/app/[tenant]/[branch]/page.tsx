@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useEffectEvent, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useEffectEvent, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
@@ -13,13 +13,14 @@ import Error from "@/components/ui/error";
 import { Input, Label, Select } from "@/components/ui/field";
 import Loading from "@/components/ui/loading";
 import { PAYMENT_STATUSES } from "@/lib/constants";
-import { getBranches } from "@/services/branch-service";
-import { getCategories } from "@/services/category-service";
-import { getClients } from "@/services/client-service";
-import { getBranchMenuItems } from "@/services/menu-item-service";
-import { createOrder, getOrder, updateOrderStatus } from "@/services/order-service";
+import {
+  cancelStorefrontOrder,
+  createStorefrontOrder,
+  getStorefront,
+  getStorefrontOrder,
+} from "@/services/storefront-service";
 import type { MenuItem } from "@/types/menu-item";
-import type { Order } from "@/types/order";
+import type { OrderCreatePayload } from "@/types/order";
 import { formatCurrency, websocketRoot } from "@/utils";
 import { connectWebsocket } from "@/websocket/socket";
 
@@ -37,111 +38,99 @@ export default function BranchTenantPage({
     customer_phone: "",
     payment_status: PAYMENT_STATUSES[0] as string,
   });
-  const [latestOrderId, setLatestOrderId] = useState<number | null>(null);
+  const [latestOrder, setLatestOrder] = useState<{ id: number; token: string } | null>(null);
   const [events, setEvents] = useState<string[]>([]);
 
-  const branchesQuery = useQuery({ queryKey: ["branches"], queryFn: getBranches });
-  const clientsQuery = useQuery({ queryKey: ["clients"], queryFn: getClients });
-  const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: getCategories });
-
-  const branch = useMemo(
-    () => (branchesQuery.data ?? []).find((item) => item.slug === params.branch),
-    [branchesQuery.data, params.branch],
-  );
-  const client = useMemo(
-    () => (clientsQuery.data ?? []).find((item) => item.slug === params.tenant) ?? null,
-    [clientsQuery.data, params.tenant],
-  );
-
-  const menuItemsQuery = useQuery({
-    queryKey: ["branch-menu-items", branch?.id],
-    queryFn: () => getBranchMenuItems(branch!.id),
-    enabled: Boolean(branch?.id),
+  const storefrontQuery = useQuery({
+    queryKey: ["storefront", params.tenant, params.branch],
+    queryFn: () => getStorefront(params.tenant, params.branch),
   });
 
   const latestOrderQuery = useQuery({
-    queryKey: ["storefront-order", latestOrderId],
-    queryFn: () => getOrder(latestOrderId!),
-    enabled: Boolean(latestOrderId),
-    refetchInterval: latestOrderId ? 5000 : false,
+    queryKey: ["storefront-order", latestOrder?.id],
+    queryFn: () => getStorefrontOrder(params.tenant, params.branch, latestOrder!.id, latestOrder!.token),
+    enabled: Boolean(latestOrder),
+    refetchInterval: latestOrder ? 5000 : false,
   });
 
   const onSocketMessage = useEffectEvent((event: MessageEvent<string>) => {
-    const payload = JSON.parse(event.data) as { event: string; data: Order };
+    const payload = JSON.parse(event.data) as { event: string; data: { id: number; status: string } };
     setEvents((current) => [
       `${payload.event}: Order #${payload.data.id} is ${payload.data.status}`,
       ...current,
     ].slice(0, 6));
-    if (latestOrderId === payload.data.id) {
-      void queryClient.invalidateQueries({ queryKey: ["storefront-order", latestOrderId] });
+
+    if (latestOrder?.id === payload.data.id) {
+      void queryClient.invalidateQueries({ queryKey: ["storefront-order", latestOrder.id] });
     }
   });
 
   useEffect(() => {
-    if (!branch?.id) {
+    const branchId = storefrontQuery.data?.branch?.id;
+
+    if (!branchId) {
       return;
     }
 
-    const socket = connectWebsocket(`${websocketRoot()}/ws/orders/${branch.id}`);
+    const socket = connectWebsocket(`${websocketRoot()}/ws/orders/${branchId}`);
     socket.addEventListener("message", onSocketMessage);
 
     return () => {
       socket.removeEventListener("message", onSocketMessage);
       socket.close();
     };
-  }, [branch?.id]);
+  }, [onSocketMessage, storefrontQuery.data?.branch?.id]);
 
   const createOrderMutation = useMutation({
-    mutationFn: createOrder,
+    mutationFn: (payload: OrderCreatePayload) => createStorefrontOrder(params.tenant, params.branch, payload),
     onSuccess: (order) => {
       toast.success(`Order #${order.id} placed`);
-      setLatestOrderId(order.id);
+      if (order.customer_token) {
+        setLatestOrder({ id: order.id, token: order.customer_token });
+      }
       setCart({});
       setOrderForm({
         customer_name: "",
         customer_phone: "",
         payment_status: PAYMENT_STATUSES[0],
       });
-      void queryClient.invalidateQueries({ queryKey: ["branch-menu-items", branch?.id] });
     },
     onError: () => toast.error("Could not place order"),
   });
 
   const cancelOrderMutation = useMutation({
-    mutationFn: (orderId: number) => updateOrderStatus(orderId, { status: "CANCELLED" }),
+    mutationFn: ({ orderId, token }: { orderId: number; token: string }) =>
+      cancelStorefrontOrder(params.tenant, params.branch, orderId, token),
     onSuccess: () => {
       toast.success("Order cancelled");
-      if (latestOrderId) {
-        void queryClient.invalidateQueries({ queryKey: ["storefront-order", latestOrderId] });
+      if (latestOrder?.id) {
+        void queryClient.invalidateQueries({ queryKey: ["storefront-order", latestOrder.id] });
       }
     },
     onError: () => toast.error("This order can no longer be cancelled"),
   });
 
-  if (branchesQuery.isLoading || clientsQuery.isLoading || categoriesQuery.isLoading) {
+  if (storefrontQuery.isLoading) {
     return <Loading />;
   }
 
-  if (
-    branchesQuery.isError ||
-    clientsQuery.isError ||
-    categoriesQuery.isError ||
-    menuItemsQuery.isError
-  ) {
+  if (storefrontQuery.isError || latestOrderQuery.isError) {
     return <Error message="Storefront data could not be loaded." />;
   }
 
-  if (!branch || !client || client.id !== branch.tenant_id) {
+  const storefront = storefrontQuery.data;
+
+  if (!storefront) {
     return (
       <Error message="That storefront route does not match an available tenant and branch in the current API data." />
     );
   }
 
-  const categories = (categoriesQuery.data ?? []).filter((item) => item.branch_id === branch.id);
-  const menuItems = (menuItemsQuery.data ?? []).filter((item) =>
+  const { branch, client, categories } = storefront;
+  const menuItems = storefront.menu_items.filter((item) =>
     item.name.toLowerCase().includes(deferredSearch.toLowerCase()),
   );
-  const cartItems = (menuItemsQuery.data ?? []).filter((item) => cart[item.id]);
+  const cartItems = storefront.menu_items.filter((item) => cart[item.id]);
   const total = cartItems.reduce((sum, item) => sum + item.price * cart[item.id], 0);
 
   function updateCart(item: MenuItem, delta: number) {
@@ -175,7 +164,9 @@ export default function BranchTenantPage({
               </div>
               <div className="flex flex-wrap gap-3 text-sm text-stone-600">
                 <span>{branch.address}</span>
-                <span>{branch.opening_time} - {branch.closing_time}</span>
+                <span>
+                  {branch.opening_time} - {branch.closing_time}
+                </span>
                 <span>{branch.phone}</span>
               </div>
             </div>
@@ -305,6 +296,7 @@ export default function BranchTenantPage({
                 className="space-y-4"
                 onSubmit={(event) => {
                   event.preventDefault();
+
                   if (!cartItems.length) {
                     toast.error("Add at least one menu item");
                     return;
@@ -387,11 +379,11 @@ export default function BranchTenantPage({
                     Payment: {latestOrderQuery.data.payment_status} | Total:{" "}
                     {formatCurrency(latestOrderQuery.data.total_amount)}
                   </p>
-                  {latestOrderQuery.data.status === "PENDING" ? (
+                  {latestOrderQuery.data.status === "PENDING" && latestOrder ? (
                     <Button
                       variant="danger"
                       disabled={cancelOrderMutation.isPending}
-                      onClick={() => cancelOrderMutation.mutate(latestOrderQuery.data.id)}
+                      onClick={() => cancelOrderMutation.mutate({ orderId: latestOrder.id, token: latestOrder.token })}
                     >
                       {cancelOrderMutation.isPending ? "Cancelling..." : "Cancel before acceptance"}
                     </Button>

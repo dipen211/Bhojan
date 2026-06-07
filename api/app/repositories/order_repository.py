@@ -9,6 +9,7 @@ from app.dummy_db.order_items import (
 from app.core.order_status import (
     PENDING
 )
+from secrets import token_urlsafe
 
 
 class OrderRepository:
@@ -16,6 +17,16 @@ class OrderRepository:
     @staticmethod
     def find_all():
         return orders
+
+    @staticmethod
+    def find_by_tenant_id(
+        tenant_id: int
+    ):
+        return [
+            order
+            for order in orders
+            if order["tenant_id"] == tenant_id
+        ]
 
     @staticmethod
     def find_by_branch_id(
@@ -51,7 +62,8 @@ class OrderRepository:
             "customer_phone": payload.customer_phone,
             "total_amount": payload.total_amount,
             "status": PENDING,
-            "payment_status": payload.payment_status
+            "payment_status": payload.payment_status,
+            "customer_token": token_urlsafe(18)
         }
 
         orders.append(new_order)

@@ -34,6 +34,20 @@ class BranchRepository:
         ]
 
     @staticmethod
+    def find_by_slug_and_tenant_id(
+        slug: str,
+        tenant_id: int
+    ):
+        return next(
+            (
+                branch
+                for branch in branches
+                if branch["slug"] == slug and branch["tenant_id"] == tenant_id
+            ),
+            None
+        )
+
+    @staticmethod
     def create(payload):
 
         new_branch = {

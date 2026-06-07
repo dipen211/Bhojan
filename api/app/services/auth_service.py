@@ -51,7 +51,15 @@ class AuthService:
         if not user:
             return None
 
-        is_valid_password = payload.password == user["password"]
+        stored_password = user["password"]
+
+        if isinstance(stored_password, str) and stored_password.startswith("$2"):
+            is_valid_password = verify_password(
+                payload.password,
+                stored_password
+            )
+        else:
+            is_valid_password = payload.password == stored_password
         
         if not is_valid_password:
             return None

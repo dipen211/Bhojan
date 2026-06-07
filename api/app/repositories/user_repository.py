@@ -28,6 +28,17 @@ class UserRepository:
         return UserRepository._sanitize(user)
 
     @staticmethod
+    def find_raw_by_id(user_id: int):
+        return next(
+            (
+                item
+                for item in users
+                if item["id"] == user_id
+            ),
+            None
+        )
+
+    @staticmethod
     def find_raw_by_email(email: str):
         return next(
             (

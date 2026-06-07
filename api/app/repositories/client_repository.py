@@ -20,6 +20,17 @@ class ClientRepository:
         )
 
     @staticmethod
+    def find_by_slug(slug: str):
+        return next(
+            (
+                client
+                for client in clients
+                if client["slug"] == slug
+            ),
+            None
+        )
+
+    @staticmethod
     def create(payload):
 
         new_client = {
