@@ -1,7 +1,4 @@
 fastapi
 uvicorn
 python-multipart
-
-# python -m venv venv
-# venv\Scripts\activate
-# uvicorn app.main:app --reload
+python-dotenv
